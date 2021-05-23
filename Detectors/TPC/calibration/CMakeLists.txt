@@ -20,9 +20,12 @@ o2_add_library(TPCCalibration
                        src/DigitDump.cxx
                        src/DigitDumpParam.cxx
                        src/CalibPadGainTracks.cxx
+                       src/CalibdEdx.cxx
                PUBLIC_LINK_LIBRARIES O2::DataFormatsTPC O2::TPCBase
                                      O2::TPCReconstruction ROOT::Minuit
-                                     Microsoft.GSL::GSL)
+                                     Microsoft.GSL::GSL
+                                     O2::DetectorsCalibration
+                                     O2::DetectorsDCS)
 
 o2_target_root_dictionary(TPCCalibration
                           HEADERS include/TPCCalibration/CalibRawBase.h
@@ -34,7 +37,8 @@ o2_target_root_dictionary(TPCCalibration
                                   include/TPCCalibration/DigitDump.h
                                   include/TPCCalibration/DigitDumpParam.h
                                   include/TPCCalibration/CalibPadGainTracks.h
-                                  include/TPCCalibration/FastHisto.h)
+                                  include/TPCCalibration/FastHisto.h
+                                  include/TPCCalibration/CalibdEdx.h)
 
 o2_add_test_root_macro(macro/comparePedestalsAndNoise.C
                        PUBLIC_LINK_LIBRARIES O2::TPCBase
