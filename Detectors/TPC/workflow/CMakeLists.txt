@@ -22,6 +22,7 @@ o2_add_library(TPCWorkflow
                        src/FileReaderWorkflow.cxx
                        src/CalDetMergerPublisherSpec.cxx
                        src/KryptonClustererSpec.cxx
+                       src/CalibdEdxSpec.cxx
                TARGETVARNAME targetName
                PUBLIC_LINK_LIBRARIES O2::Framework O2::DataFormatsTPC
                                      O2::DPLUtils O2::TPCReconstruction
@@ -74,6 +75,11 @@ o2_add_executable(file-reader
 o2_add_executable(krypton-clusterer
                   COMPONENT_NAME tpc
                   SOURCES src/tpc-krypton-clusterer.cxx
+                  PUBLIC_LINK_LIBRARIES O2::TPCWorkflow)
+
+o2_add_executable(calib-dEdx
+                  COMPONENT_NAME tpc
+                  SOURCES src/tpc-calib-dEdx.cxx
                   PUBLIC_LINK_LIBRARIES O2::TPCWorkflow)
 
 o2_add_test(workflow
