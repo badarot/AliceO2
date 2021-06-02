@@ -15,8 +15,11 @@
 #include <array>
 
 // o2 includes
+<<<<<<< HEAD
 #include "DataFormatsTPC/TrackTPC.h"
 #include "DataFormatsTPC/dEdxInfo.h"
+=======
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 #include "CCDB/CcdbObjectInfo.h"
 #include "DetectorsCalibration/TimeSlotCalibration.h"
 #include "DetectorsCalibration/TimeSlot.h"
@@ -27,6 +30,7 @@ namespace o2
 namespace tpc
 {
 
+<<<<<<< HEAD
 // class TrackTPC;
 
 // FIXME: not sure about this
@@ -34,6 +38,9 @@ struct CalibMIPposition {
   uint64_t timeFrame;
   std::vector<double> mip;
 };
+=======
+class TrackTPC;
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 
 class CalibdEdx
 {
@@ -42,7 +49,12 @@ class CalibdEdx
  public:
   CalibdEdx(double min_p, double max_p, int min_clusters, unsigned int n_bins)
     : mMinClusters{min_clusters}, mMinP{min_p}, mMaxP{max_p}
+<<<<<<< HEAD
     , mHist{{{n_bins, 0, static_cast<float>(n_bins)}, {n_bins, 0, static_cast<float>(n_bins)}}} // oh my god this is so ugly
+=======
+    // oh my god this is so ugly
+    , mHist{{{n_bins, 0, static_cast<float>(n_bins)}, {n_bins, 0, static_cast<float>(n_bins)}}}
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
   {
   }
 
@@ -62,6 +74,7 @@ class CalibdEdx
   std::array<float, 2> mHistEntries{0, 0};
   std::array<Hist, 2> mHist;
 
+<<<<<<< HEAD
   ClassDefNV(CalibdEdx, 1);
 };
 
@@ -71,36 +84,60 @@ class CalibratordEdx final : public o2::calibration::TimeSlotCalibration<o2::tpc
   using CcdbObjectInfoVector = std::vector<o2::ccdb::CcdbObjectInfo>;
   using MIPposition = CalibMIPposition;
   using MIPVector = std::vector<MIPposition>;
+=======
+  // ClassDefNV(CalibdEdx, 1);
+};
+
+class CalibratordEdx final : public o2::calibration::TimeSlotCalibration<TrackTPC, CalibdEdx>
+{
+  using Slot = o2::calibration::TimeSlot<CalibdEdx>;
+  using CcdbObjectInfo = o2::ccdb::CcdbObjectInfo;
+  using CcdbObjectInfoVector = std::vector<CcdbObjectInfo>;
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 
  public:
   CalibratordEdx(int min_entries = 100, double min_p = 0.4, double max_p = 0.6, int min_clusters = 60, int n_bins = 200)
     : mMinEntries(min_entries), mMinClusters{min_clusters}, mMinP{min_p}, mMaxP{max_p}, mNBins{n_bins}
   {
   }
+<<<<<<< HEAD
   ~CalibratordEdx() final = default;
 
   bool hasEnoughData(const Slot& slot) const final
   {
     return slot.getContainer()->getASideEntries() >= mMinEntries && slot.getContainer()->getCSideEntries() >= mMinEntries;
   }
+=======
+
+  bool hasEnoughData(const Slot& slot) const final {
+    return slot.getContainer()->getASideEntries() >= mMinEntries && slot.getContainer()->getCSideEntries() >= mMinEntries;}
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 
   void initOutput() final;
   void finalizeSlot(Slot& slot) final;
   Slot& emplaceNewSlot(bool front, uint64_t tstart, uint64_t tend) final;
 
+<<<<<<< HEAD
   const MIPVector& getMIPVector() const { return mMIPVector; }
   const CcdbObjectInfoVector& getInfoVector() const { return mInfoVector; }
   CcdbObjectInfoVector& getInfoVector() { return mInfoVector; }
 
+=======
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
  private:
   int mMinEntries;
   int mMinClusters;
   double mMinP, mMaxP;
   int mNBins;
+<<<<<<< HEAD
   CcdbObjectInfoVector mInfoVector; // vector of CCDB Infos , each element is filled with the CCDB description of the accompanying LHCPhase
   MIPVector mMIPVector;             // vector of LhcPhase, each element is filled in "process" when we finalize one slot (multiple can be finalized during the same "process", which is why we have a vector. Each element is to be considered the output of the device, and will go to the CCDB
 
   ClassDefOverride(CalibratordEdx, 1);
+=======
+
+  // ClassDefOverride(CalibratordEdx, 1);
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 };
 
 } // namespace tpc

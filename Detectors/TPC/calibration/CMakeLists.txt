@@ -25,9 +25,13 @@ o2_add_library(TPCCalibration
                                      O2::TPCReconstruction ROOT::Minuit
                                      Microsoft.GSL::GSL
                                      O2::DetectorsCalibration
+<<<<<<< HEAD
                                      O2::DetectorsDCS
                                      O2::CCDB
                                      O2::Framework)
+=======
+                                     O2::DetectorsDCS)
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 
 o2_target_root_dictionary(TPCCalibration
                           HEADERS include/TPCCalibration/CalibRawBase.h

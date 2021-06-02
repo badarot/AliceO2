@@ -15,11 +15,16 @@
 #include <array>
 
 //o2 includes
+<<<<<<< HEAD
 #include "CommonUtils/MemFileHelper.h"
 #include "CCDB/CcdbApi.h"
 #include "DataFormatsTPC/dEdxInfo.h"
 #include "DataFormatsTPC/TrackTPC.h"
 #include "DetectorsCalibration/Utils.h"
+=======
+#include "DataFormatsTPC/dEdxInfo.h"
+#include "DataFormatsTPC/TrackTPC.h"
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 #include "Framework/Logger.h"
 #include "TPCCalibration/FastHisto.h"
 
@@ -74,15 +79,20 @@ void CalibdEdx::dumpToFile(const std::string& file_name) const
 
 void CalibratordEdx::initOutput()
 {
+<<<<<<< HEAD
 
   // Here we initialize the vector of our output objects
   mInfoVector.clear();
   mMIPVector.clear();
+=======
+  //TODO: implement this
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
   return;
 }
 
 void CalibratordEdx::finalizeSlot(Slot& slot)
 {
+<<<<<<< HEAD
   CalibdEdx* container = slot.getContainer();
   LOG(INFO) << "Finalizing slot " << slot.getTFStart() << " <= TF <= " << slot.getTFEnd();
 
@@ -106,6 +116,9 @@ void CalibratordEdx::finalizeSlot(Slot& slot)
   mMIPVector.emplace_back(mip);
 
   slot.print();
+=======
+  // TODO: find MIP with gaussian fit
+>>>>>>> a1ffd77963df334ca66d88c3fdceff2c428400f9
 }
 
 CalibratordEdx::Slot& CalibratordEdx::emplaceNewSlot(bool front, uint64_t tstart, uint64_t tend)
