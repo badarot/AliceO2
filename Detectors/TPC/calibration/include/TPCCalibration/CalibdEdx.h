@@ -41,8 +41,7 @@ class CalibdEdx
 
  public:
   CalibdEdx(double min_p, double max_p, int min_clusters, unsigned int n_bins)
-    : mMinClusters{min_clusters}, mMinP{min_p}, mMaxP{max_p}
-    , mHist{{{n_bins, 0, static_cast<float>(n_bins)}, {n_bins, 0, static_cast<float>(n_bins)}}} // oh my god this is so ugly
+    : mMinClusters{min_clusters}, mMinP{min_p}, mMaxP{max_p}, mHist{{{n_bins, 0, static_cast<float>(n_bins)}, {n_bins, 0, static_cast<float>(n_bins)}}} // oh my god this is so ugly
   {
   }
 
