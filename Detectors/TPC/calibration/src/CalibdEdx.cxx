@@ -15,8 +15,11 @@
 #include <array>
 
 //o2 includes
+#include "CommonUtils/MemFileHelper.h"
+#include "CCDB/CcdbApi.h"
 #include "DataFormatsTPC/dEdxInfo.h"
 #include "DataFormatsTPC/TrackTPC.h"
+#include "DetectorsCalibration/Utils.h"
 #include "Framework/Logger.h"
 #include "TPCCalibration/FastHisto.h"
 
@@ -71,13 +74,38 @@ void CalibdEdx::dumpToFile(const std::string& file_name) const
 
 void CalibratordEdx::initOutput()
 {
-  //TODO: implement this
+
+  // Here we initialize the vector of our output objects
+  mInfoVector.clear();
+  mMIPVector.clear();
   return;
 }
 
 void CalibratordEdx::finalizeSlot(Slot& slot)
 {
-  // TODO: find MIP with gaussian fit
+  CalibdEdx* container = slot.getContainer();
+  LOG(INFO) << "Finalizing slot " << slot.getTFStart() << " <= TF <= " << slot.getTFEnd();
+
+  auto statsASide = container->getHist()[0].getStatisticsData();
+  auto statsCSide = container->getHist()[1].getStatisticsData();
+
+  LOG(INFO) << "A side: Mean = " << statsASide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsASide.mSum;
+  LOG(INFO) << "C side: Mean = " << statsCSide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsCSide.mSum;
+
+  // FIXME: not sure about this
+
+  // TODO: the timestamp is now given with the TF index, but it will have
+  // to become an absolute time. This is true both for the lhc phase object itself
+  // and the CCDB entry
+  MIPposition mip{slot.getTFStart(), {statsASide.mCOG, statsCSide.mCOG}};
+
+  auto clName = o2::utils::MemFileHelper::getClassName(mip);
+  auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
+  std::map<std::string, std::string> md;
+  mInfoVector.emplace_back("TPC/MIPposition", clName, flName, md, slot.getTFStart(), 99999999999999);
+  mMIPVector.emplace_back(mip);
+
+  slot.print();
 }
 
 CalibratordEdx::Slot& CalibratordEdx::emplaceNewSlot(bool front, uint64_t tstart, uint64_t tend)
