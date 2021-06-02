@@ -14,14 +14,17 @@
 #include <memory>
 
 //o2 includes
+#include "CCDB/CcdbApi.h"
+#include "CCDB/CcdbObjectInfo.h"
+#include "DataFormatsTPC/TrackTPC.h"
+#include "DetectorsCalibration/Utils.h"
 #include "Framework/Task.h"
 #include "Framework/DataProcessorSpec.h"
 #include "Framework/ConfigParamRegistry.h"
-#include "DataFormatsTPC/TrackTPC.h"
-#include "DetectorsCalibration/Utils.h"
 #include "TPCCalibration/CalibdEdx.h"
 
 using namespace o2::framework;
+
 namespace o2
 {
 namespace calibration
@@ -53,32 +56,72 @@ class CalibdEdxDevice : public Task
     LOG(INFO) << "Processing TF " << tfcounter << " with " << tracks.size() << " tracks";
 
     mCalibrator->process(tfcounter, tracks);
+    sendOutput(pc.outputs());
 
-
+    const auto& infoVec = mCalibrator->getInfoVector();
+    LOG(INFO) << "Created " << infoVec.size() << " objects for TF " << tfcounter;
   }
 
   void endOfStream(EndOfStreamContext& eos) final
   {
+    LOG(INFO) << "Finalizing calibration";
+    // FIXME: not sure about this
+    constexpr uint64_t INFINITE_TF = 0xffffffffffffffff;
+    mCalibrator->checkSlotsToFinalize(INFINITE_TF);
+    sendOutput(eos.outputs());
     // mCalibrator->dumpToFile("test.root");
   }
 
  private:
+  void sendOutput(DataAllocator& output)
+  {
+    // extract CCDB infos and calibration objects, convert it to TMemFile and send them to the output
+    // TODO in principle, this routine is generic, can be moved to Utils.h
+    using clbUtils = o2::calibration::Utils;
+    const auto& payloadVec = mCalibrator->getMIPVector();
+    auto& infoVec = mCalibrator->getInfoVector(); // use non-const version as we update it
+    assert(payloadVec.size() == infoVec.size());
+
+    // FIXME: not sure about this
+    for (uint32_t i = 0; i < payloadVec.size(); i++) {
+      auto& entry = infoVec[i];
+      auto image = o2::ccdb::CcdbApi::createObjectImage(&payloadVec[i], &entry);
+      LOG(INFO) << "Sending object " << entry.getPath() << "/" << entry.getFileName() << " of size " << image->size()
+                << " bytes, valid for " << entry.getStartValidityTimestamp() << " : " << entry.getEndValidityTimestamp();
+      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "TPC_MIPposition", i}, *image.get()); // vector<char>
+      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, "TPC_MIPposition", i}, entry);        // root-serialized
+    }
+    if (payloadVec.size()) {
+      mCalibrator->initOutput(); // reset the outputs once they are already sent
+    }
+  }
+
   std::unique_ptr<tpc::CalibratordEdx> mCalibrator;
 };
 
 } // namespace calibration
 
-namespace framework {
+namespace framework
+{
 DataProcessorSpec getCalibdEdxSpec()
 {
+  using device = o2::calibration::CalibdEdxDevice;
+  using clbUtils = o2::calibration::Utils;
+
+  std::vector<OutputSpec> outputs;
+
+  // FIXME: not sure about this
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, "TPC_MIPposition"});
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, "TPC_MIPposition"});
+
   return DataProcessorSpec{
     "tpc-calib-dEdx",
     // select("tracks:TPC/TRACKS"),
     Inputs{
       InputSpec{"tracks", "TPC", "TRACKS"},
     },
-    Outputs{},
-    adaptFromTask<calibration::CalibdEdxDevice>(),
+    outputs,
+    adaptFromTask<device>(),
     Options{
       {"tf-per-slot", VariantType::Int, 100, {"number of TFs per calibration time slot"}},
       {"max-delay", VariantType::Int, 3, {"number of slots in past to consider"}},
@@ -89,5 +132,5 @@ DataProcessorSpec getCalibdEdxSpec()
       {"nbins", VariantType::Int, 200, {"number of bins for stored"}}}};
 }
 
-} // namespace framwork
+} // namespace framework
 } // namespace o2
