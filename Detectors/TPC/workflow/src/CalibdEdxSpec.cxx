@@ -21,13 +21,11 @@
 #include "Framework/Task.h"
 #include "Framework/DataProcessorSpec.h"
 #include "Framework/ConfigParamRegistry.h"
-#include "TPCCalibration/CalibdEdx.h"
+#include "TPCCalibration/CalibratordEdx.h"
 
 using namespace o2::framework;
 
-namespace o2
-{
-namespace tpc
+namespace o2::tpc
 {
 
 class CalibdEdxDevice : public Task
@@ -35,13 +33,14 @@ class CalibdEdxDevice : public Task
  public:
   void init(framework::InitContext& ic) final
   {
-    int slot_length = ic.options().get<int>("tf-per-slot");
-    int max_delay = ic.options().get<int>("max-delay");
-    int min_entries = std::max(50, ic.options().get<int>("min-entries"));
-    double min_p = std::min(0.49, ic.options().get<double>("min-momentum"));
-    double max_p = std::max(0.51, ic.options().get<double>("max-momentum"));
-    int min_clusters = std::max(15, ic.options().get<int>("min-clusters"));
-    int nbins = std::max(50, ic.options().get<int>("nbins"));
+    const int slot_length = ic.options().get<int>("tf-per-slot");
+    const int max_delay = ic.options().get<int>("max-delay");
+    const int min_entries = std::max(50, ic.options().get<int>("min-entries"));
+    const double min_p = std::min(0.49, ic.options().get<double>("min-momentum"));
+    const double max_p = std::max(0.51, ic.options().get<double>("max-momentum"));
+    const int min_clusters = std::max(15, ic.options().get<int>("min-clusters"));
+    const int nbins = std::max(50, ic.options().get<int>("nbins"));
+    mDumpData = ic.options().get<bool>("direct-file-dump");
 
     mCalibrator = std::make_unique<tpc::CalibratordEdx>(min_entries, min_p, max_p, min_clusters, nbins);
     mCalibrator->setSlotLength(slot_length);
@@ -50,8 +49,8 @@ class CalibdEdxDevice : public Task
 
   void run(ProcessingContext& pc) final
   {
-    auto tfcounter = o2::header::get<DataProcessingHeader*>(pc.inputs().get("tracks").header)->startTime;
-    auto tracks = pc.inputs().get<gsl::span<tpc::TrackTPC>>("tracks");
+    const auto tfcounter = o2::header::get<DataProcessingHeader*>(pc.inputs().get("tracks").header)->startTime;
+    const auto tracks = pc.inputs().get<gsl::span<tpc::TrackTPC>>("tracks");
 
     LOG(INFO) << "Processing TF " << tfcounter << " with " << tracks.size() << " tracks";
 
@@ -68,8 +67,12 @@ class CalibdEdxDevice : public Task
     // FIXME: not sure about this
     constexpr uint64_t INFINITE_TF = 0xffffffffffffffff;
     mCalibrator->checkSlotsToFinalize(INFINITE_TF);
+
+    if (mDumpData) {
+      mCalibrator->dumpToFile("mip_position.root");
+    }
+
     sendOutput(eos.outputs());
-    mCalibrator->dumpToFile("mip_position.root");
   }
 
  private:
@@ -96,6 +99,7 @@ class CalibdEdxDevice : public Task
     }
   }
 
+  bool mDumpData{};
   std::unique_ptr<CalibratordEdx> mCalibrator;
 };
 
@@ -125,8 +129,8 @@ DataProcessorSpec getCalibdEdxSpec()
       {"min-momentum", VariantType::Double, 0.4, {"minimum momentum cut"}},
       {"max-momentum", VariantType::Double, 0.6, {"maximum momentum cut"}},
       {"min-clusters", VariantType::Int, 60, {"minimum number of clusters in a track"}},
-      {"nbins", VariantType::Int, 200, {"number of bins for stored"}}}};
+      {"nbins", VariantType::Int, 200, {"number of bins for stored"}},
+      {"direct-file-dump", VariantType::Bool, false, {"directly dump calibration to file"}}}};
 }
 
-} // namespace tpc
-} // namespace o2
+} // namespace o2::tpc

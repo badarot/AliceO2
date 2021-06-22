@@ -25,6 +25,7 @@
 
 //root includes
 #include "TFile.h"
+#include "TTree.h"
 
 using namespace o2::tpc;
 
@@ -38,10 +39,10 @@ void CalibdEdx::fill(const gsl::span<const TrackTPC> tracks)
     if (mMinP < p && p < mMaxP || cluster_count >= mMinClusters) {
       // filling histogram
       if (track.hasASideClustersOnly()) {
-        mHistEntries[0]++;
+        mEntries[0]++;
         mHist[0].fill(track.getdEdx().dEdxTotTPC);
       } else if (track.hasCSideClustersOnly()) {
-        mHistEntries[1]++;
+        mEntries[1]++;
         mHist[1].fill(track.getdEdx().dEdxTotTPC);
       }
     }
@@ -60,7 +61,7 @@ void CalibdEdx::merge(const CalibdEdx* prev)
 
 void CalibdEdx::print() const
 {
-  LOG(INFO) << mHistEntries[0] << " A side entries and " << mHistEntries[1] << " C side entries";
+  LOG(INFO) << mEntries[0] << " A side entries and " << mEntries[1] << " C side entries";
 }
 
 void CalibdEdx::dumpToFile(const std::string& file_name) const
@@ -68,58 +69,6 @@ void CalibdEdx::dumpToFile(const std::string& file_name) const
   TFile file(file_name.c_str(), "recreate");
   file.WriteObject(&mHist[0], "dEdxTotTPC A side");
   file.WriteObject(&mHist[1], "dEdxTotTPC C side");
-
-  file.Close();
-}
-
-void CalibratordEdx::initOutput()
-{
-
-  // Here we initialize the vector of our output objects
-  mInfoVector.clear();
-  mMIPVector.clear();
-  return;
-}
-
-void CalibratordEdx::finalizeSlot(Slot& slot)
-{
-  CalibdEdx* container = slot.getContainer();
-  LOG(INFO) << "Finalizing slot " << slot.getTFStart() << " <= TF <= " << slot.getTFEnd();
-
-  auto statsASide = container->getHist()[0].getStatisticsData();
-  auto statsCSide = container->getHist()[1].getStatisticsData();
-
-  LOG(INFO) << "A side: Mean = " << statsASide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsASide.mSum;
-  LOG(INFO) << "C side: Mean = " << statsCSide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsCSide.mSum;
-
-  // FIXME: not sure about this
-
-  // TODO: the timestamp is now given with the TF index, but it will have
-  // to become an absolute time. This is true both for the lhc phase object itself
-  // and the CCDB entry
-  MIPposition mip{slot.getTFStart(), {statsASide.mCOG, statsCSide.mCOG}};
-
-  auto clName = o2::utils::MemFileHelper::getClassName(mip);
-  auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
-  std::map<std::string, std::string> md;
-  mInfoVector.emplace_back("TPC/MIPposition", clName, flName, md, slot.getTFStart(), 99999999999999);
-  mMIPVector.emplace_back(mip);
-
-  slot.print();
-}
-
-CalibratordEdx::Slot& CalibratordEdx::emplaceNewSlot(bool front, uint64_t tstart, uint64_t tend)
-{
-  auto& cont = getSlots();
-  auto& slot = front ? cont.emplace_front(tstart, tend) : cont.emplace_back(tstart, tend);
-  slot.setContainer(std::make_unique<CalibdEdx>(mMinClusters, mMinP, mMaxP, mNBins));
-  return slot;
-}
-
-void CalibratordEdx::dumpToFile(const std::string& file_name) const
-{
-  TFile file(file_name.c_str(), "recreate");
-  file.WriteObject(&mMIPVector, "MIPposition");
 
   file.Close();
 }
