@@ -16,27 +16,23 @@
 #include <gsl/span>
 
 // o2 includes
-#include "DataFormatsTPC/TrackTPC.h"
 #include "TPCCalibration/FastHisto.h"
+#include "DataFormatsTPC/TrackCuts.h"
 
 namespace o2::tpc
 {
 
-// FIXME: not sure about this
-struct CalibMIPposition {
-  uint64_t timeFrame;
-  std::vector<double> mip;
-};
+// forward declaration
+class TrackTPC;
 
 class CalibdEdx
 {
   using Hist = FastHisto<float>;
 
  public:
-  CalibdEdx(double minP, double maxP, int minClusters, unsigned int nBins)
-    : mMinClusters{minClusters}, mMinP{minP}, mMaxP{maxP}, mHist{{{nBins, 0, static_cast<float>(nBins)}, {nBins, 0, static_cast<float>(nBins)}}}
-  {
-  }
+  CalibdEdx(TrackCuts cuts, unsigned int nBins);
+  CalibdEdx(double minP, double maxP, int minClusters, unsigned int nBins);
+  CalibdEdx(unsigned int nBins);
 
   void fill(const gsl::span<const TrackTPC> tracks);
   void merge(const CalibdEdx* prev);
@@ -49,9 +45,8 @@ class CalibdEdx
   const std::array<Hist, 2>& getHist() const { return mHist; }
 
  private:
-  int mMinClusters{}; ///< Minimum number of clusters in track
-  double mMinP{};     ///< Minimum track momentum
-  double mMaxP{};     ///< Maximum track momentum
+  bool mApplyCuts{true};
+  TrackCuts mCuts;
 
   std::array<float, 2> mEntries{0, 0}; ///< Number of entries in each histogram
   std::array<Hist, 2> mHist;           ///< MIP position histograms, for TPC's A and C sides

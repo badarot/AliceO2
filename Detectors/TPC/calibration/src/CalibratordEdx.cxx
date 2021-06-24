@@ -11,17 +11,13 @@
 #include "TPCCalibration/CalibratordEdx.h"
 
 #include <cstddef>
-#include <iostream>
 #include <array>
 
 //o2 includes
 #include "CommonUtils/MemFileHelper.h"
 #include "CCDB/CcdbApi.h"
-#include "DataFormatsTPC/dEdxInfo.h"
-#include "DataFormatsTPC/TrackTPC.h"
 #include "DetectorsCalibration/Utils.h"
 #include "Framework/Logger.h"
-#include "TPCCalibration/FastHisto.h"
 #include "TPCCalibration/CalibdEdx.h"
 
 //root includes
@@ -32,7 +28,6 @@ using namespace o2::tpc;
 
 void CalibratordEdx::initOutput()
 {
-
   // Here we initialize the vector of our output objects
   mInfoVector.clear();
   mMIPVector.clear();
@@ -47,30 +42,29 @@ void CalibratordEdx::finalizeSlot(Slot& slot)
   auto statsASide = container->getHist()[0].getStatisticsData();
   auto statsCSide = container->getHist()[1].getStatisticsData();
 
-  LOG(INFO) << "A side: Mean = " << statsASide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsASide.mSum;
-  LOG(INFO) << "C side: Mean = " << statsCSide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsCSide.mSum;
+  slot.print();
+  LOG(INFO) << "A side, truncated mean statistics: Mean = " << statsASide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsASide.mSum;
+  LOG(INFO) << "C side, truncated mean statistics: Mean = " << statsCSide.mCOG << ", StdDev = " << statsCSide.mStdDev << ", Entries = " << statsCSide.mSum;
 
   // FIXME: not sure about this
 
   // TODO: the timestamp is now given with the TF index, but it will have
   // to become an absolute time. This is true both for the lhc phase object itself
   // and the CCDB entry
-  MIPposition mip{slot.getTFStart(), {statsASide.mCOG, statsCSide.mCOG}};
+  CalibMIP mip{slot.getTFStart(), {statsASide.mCOG, statsCSide.mCOG}};
 
   auto clName = o2::utils::MemFileHelper::getClassName(mip);
   auto flName = o2::ccdb::CcdbApi::generateFileName(clName);
   std::map<std::string, std::string> md;
-  mInfoVector.emplace_back("TPC/Calib/MIPposition", clName, flName, md, slot.getTFStart(), 99999999999999);
+  mInfoVector.emplace_back("TPC/Calib/MIPS", clName, flName, md, slot.getTFStart(), 99999999999999);
   mMIPVector.push_back(mip);
-
-  slot.print();
 }
 
 CalibratordEdx::Slot& CalibratordEdx::emplaceNewSlot(bool front, uint64_t tstart, uint64_t tend)
 {
   auto& cont = getSlots();
   auto& slot = front ? cont.emplace_front(tstart, tend) : cont.emplace_back(tstart, tend);
-  slot.setContainer(std::make_unique<CalibdEdx>(mMinClusters, mMinP, mMaxP, mNBins));
+  slot.setContainer(std::make_unique<CalibdEdx>(mMinP, mMaxP, mMinClusters, mNBins));
   return slot;
 }
 
@@ -78,7 +72,7 @@ void CalibratordEdx::dumpToFile(const std::string& file_name) const
 {
   LOG(INFO) << "Writing mip positions to file";
   TFile file(file_name.c_str(), "recreate");
-  MIPposition data;
+  CalibMIP data;
 
   TTree tree("mip_position", "MIP position over time");
   tree.Branch("mip", &data);

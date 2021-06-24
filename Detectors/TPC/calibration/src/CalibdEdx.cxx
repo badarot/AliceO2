@@ -10,24 +10,34 @@
 
 #include "TPCCalibration/CalibdEdx.h"
 
-#include <cstddef>
-#include <iostream>
 #include <array>
+#include <cstddef>
+#include <utility>
 
 //o2 includes
-#include "CommonUtils/MemFileHelper.h"
-#include "CCDB/CcdbApi.h"
-#include "DataFormatsTPC/dEdxInfo.h"
 #include "DataFormatsTPC/TrackTPC.h"
-#include "DetectorsCalibration/Utils.h"
+#include "DataFormatsTPC/TrackCuts.h"
 #include "Framework/Logger.h"
 #include "TPCCalibration/FastHisto.h"
 
 //root includes
 #include "TFile.h"
-#include "TTree.h"
 
 using namespace o2::tpc;
+
+CalibdEdx::CalibdEdx(TrackCuts cuts, unsigned int nBins)
+  : mCuts{std::move(cuts)}, mHist{{{nBins, 0, static_cast<float>(nBins)}, {nBins, 0, static_cast<float>(nBins)}}}
+{
+}
+
+CalibdEdx::CalibdEdx(double minP, double maxP, int minClusters, unsigned int nBins)
+  : CalibdEdx(TrackCuts(minP, maxP, minClusters), nBins) {}
+
+CalibdEdx::CalibdEdx(unsigned int nBins)
+  : CalibdEdx({}, nBins)
+{
+  mApplyCuts = false;
+}
 
 void CalibdEdx::fill(const gsl::span<const TrackTPC> tracks)
 {
@@ -36,7 +46,7 @@ void CalibdEdx::fill(const gsl::span<const TrackTPC> tracks)
     const int cluster_count = track.getNClusters();
 
     // applying cut
-    if (mMinP < p && p < mMaxP || cluster_count >= mMinClusters) {
+    if (!mApplyCuts || mCuts.goodTrack(track)) {
       // filling histogram
       if (track.hasASideClustersOnly()) {
         mEntries[0]++;
@@ -61,7 +71,7 @@ void CalibdEdx::merge(const CalibdEdx* prev)
 
 void CalibdEdx::print() const
 {
-  LOG(INFO) << mEntries[0] << " A side entries and " << mEntries[1] << " C side entries";
+  LOG(INFO) << "Total number of entries: " << mEntries[0] << " in A side, " << mEntries[1] << " in C side";
 }
 
 void CalibdEdx::dumpToFile(const std::string& file_name) const

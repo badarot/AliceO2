@@ -91,8 +91,8 @@ class CalibdEdxDevice : public Task
       auto image = o2::ccdb::CcdbApi::createObjectImage(&payloadVec[i], &entry);
       LOG(INFO) << "Sending object " << entry.getPath() << "/" << entry.getFileName() << " of size " << image->size()
                 << " bytes, valid for " << entry.getStartValidityTimestamp() << " : " << entry.getEndValidityTimestamp();
-      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "TPC_MIPposition", i}, *image.get()); // vector<char>
-      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, "TPC_MIPposition", i}, entry);        // root-serialized
+      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBPayload, "TPC_MIPS", i}, *image.get()); // vector<char>
+      output.snapshot(Output{o2::calibration::Utils::gDataOriginCDBWrapper, "TPC_MIPS", i}, entry);        // root-serialized
     }
     if (payloadVec.size()) {
       mCalibrator->initOutput(); // reset the outputs once they are already sent
@@ -111,8 +111,8 @@ DataProcessorSpec getCalibdEdxSpec()
   std::vector<OutputSpec> outputs;
 
   // FIXME: not sure about this
-  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, "TPC_MIPposition"});
-  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, "TPC_MIPposition"});
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBPayload, "TPC_MIPS"});
+  outputs.emplace_back(ConcreteDataTypeMatcher{o2::calibration::Utils::gDataOriginCDBWrapper, "TPC_MIPS"});
 
   return DataProcessorSpec{
     "tpc-calib-dEdx",

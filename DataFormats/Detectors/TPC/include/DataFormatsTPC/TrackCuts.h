@@ -25,9 +25,6 @@ namespace tpc
 
 class TrackTPC;
 
-namespace qc
-{
-
 /// @brief track cut class
 ///
 /// Can be used to apply cuts on tracks during qc.
@@ -54,7 +51,6 @@ class TrackCuts
 
   ClassDefNV(TrackCuts, 1)
 };
-} // namespace qc
 } // namespace tpc
 } // namespace o2
 

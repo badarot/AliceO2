@@ -19,18 +19,23 @@
 #include "CCDB/CcdbObjectInfo.h"
 #include "DetectorsCalibration/TimeSlotCalibration.h"
 #include "DetectorsCalibration/TimeSlot.h"
-#include "TPCCalibration/FastHisto.h"
 #include "TPCCalibration/CalibdEdx.h"
+#include "TPCCalibration/FastHisto.h"
 
 namespace o2::tpc
 {
+
+// FIXME: not sure about this
+struct CalibMIP {
+  uint64_t timeFrame;
+  std::vector<double> mip;
+};
 
 class CalibratordEdx final : public o2::calibration::TimeSlotCalibration<o2::tpc::TrackTPC, o2::tpc::CalibdEdx>
 {
   using Slot = o2::calibration::TimeSlot<CalibdEdx>;
   using CcdbObjectInfoVector = std::vector<o2::ccdb::CcdbObjectInfo>;
-  using MIPposition = CalibMIPposition;
-  using MIPVector = std::vector<MIPposition>;
+  using MIPVector = std::vector<CalibMIP>;
 
  public:
   CalibratordEdx(int minEntries = 100, double minP = 0.4, double maxP = 0.6, int minClusters = 60, int nBins = 200)
