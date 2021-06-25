@@ -76,19 +76,17 @@ DataProcessorSpec getMIPTrackFilterSpec()
   std::vector<OutputSpec> outputs;
   outputs.emplace_back("TPC", "MIPS", 0, Lifetime::Timeframe);
 
-  return DataProcessorSpec
-  {
+  return DataProcessorSpec{
     "tpc-miptrack-filter",
-      Inputs{
-        InputSpec{"tracks", "TPC", "TRACKS"},
-      },
-      outputs,
-      adaptFromTask<MIPTrackFilteDevice>(),
-      Options{
-        {"min-momentum", VariantType::Double, 0.4, {"minimum momentum cut"}},
-        {"max-momentum", VariantType::Double, 0.6, {"maximum momentum cut"}},
-        {"min-clusters", VariantType::Int, 60, {"minimum number of clusters in a track"}}}
-  };
+    Inputs{
+      InputSpec{"tracks", "TPC", "TRACKS"},
+    },
+    outputs,
+    adaptFromTask<MIPTrackFilteDevice>(),
+    Options{
+      {"min-momentum", VariantType::Double, 0.4, {"minimum momentum cut"}},
+      {"max-momentum", VariantType::Double, 0.6, {"maximum momentum cut"}},
+      {"min-clusters", VariantType::Int, 60, {"minimum number of clusters in a track"}}}};
 }
 
 } // namespace o2::tpc

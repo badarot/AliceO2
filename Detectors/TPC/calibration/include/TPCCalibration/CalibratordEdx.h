@@ -65,7 +65,7 @@ class CalibratordEdx final : public o2::calibration::TimeSlotCalibration<o2::tpc
  private:
   int mNBins{};       ///< Number of bins in each time slot histogram
   int mMinEntries{};  ///< Minimum amount of tracks in each time slot, to get enough statics
-  bool mApplyCuts{}; ///< Number of bins in each time slot histogram
+  bool mApplyCuts{};  ///< Number of bins in each time slot histogram
   double mMinP{};     ///< Minimum track momentum
   double mMaxP{};     ///< Maximum track momentum
   int mMinClusters{}; ///< Minimum number of clusters in a track

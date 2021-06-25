@@ -49,7 +49,6 @@ class CalibdEdxDevice : public Task
       mCalibrator = std::make_unique<tpc::CalibratordEdx>(nbins, minEntries);
     }
 
-
     mCalibrator->setSlotLength(slotLength);
     mCalibrator->setMaxSlotsDelay(maxDelay);
   }
