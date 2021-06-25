@@ -33,18 +33,25 @@ class CalibdEdxDevice : public Task
  public:
   void init(framework::InitContext& ic) final
   {
-    const int slot_length = ic.options().get<int>("tf-per-slot");
-    const int max_delay = ic.options().get<int>("max-delay");
-    const int min_entries = std::max(50, ic.options().get<int>("min-entries"));
-    const double min_p = std::min(0.49, ic.options().get<double>("min-momentum"));
-    const double max_p = std::max(0.51, ic.options().get<double>("max-momentum"));
-    const int min_clusters = std::max(15, ic.options().get<int>("min-clusters"));
+    const int slotLength = ic.options().get<int>("tf-per-slot");
+    const int maxDelay = ic.options().get<int>("max-delay");
+    const int minEntries = std::max(50, ic.options().get<int>("min-entries"));
     const int nbins = std::max(50, ic.options().get<int>("nbins"));
     mDumpData = ic.options().get<bool>("direct-file-dump");
+    const bool applyCuts = ic.options().get<bool>("apply-cuts");
 
-    mCalibrator = std::make_unique<tpc::CalibratordEdx>(min_entries, min_p, max_p, min_clusters, nbins);
-    mCalibrator->setSlotLength(slot_length);
-    mCalibrator->setMaxSlotsDelay(max_delay);
+    if (applyCuts) {
+      const double minP = std::min(0.49, ic.options().get<double>("min-momentum"));
+      const double maxP = std::max(0.51, ic.options().get<double>("max-momentum"));
+      const int minClusters = std::max(15, ic.options().get<int>("min-clusters"));
+      mCalibrator = std::make_unique<tpc::CalibratordEdx>(nbins, minEntries, minP, maxP, minClusters);
+    } else {
+      mCalibrator = std::make_unique<tpc::CalibratordEdx>(nbins, minEntries);
+    }
+
+
+    mCalibrator->setSlotLength(slotLength);
+    mCalibrator->setMaxSlotsDelay(maxDelay);
   }
 
   void run(ProcessingContext& pc) final
@@ -118,17 +125,18 @@ DataProcessorSpec getCalibdEdxSpec()
     "tpc-calib-dEdx",
     // select("tracks:TPC/TRACKS"),
     Inputs{
-      InputSpec{"tracks", "TPC", "TRACKS"},
+      InputSpec{"tracks", "TPC", "MIPS"},
     },
     outputs,
     adaptFromTask<device>(),
     Options{
       {"tf-per-slot", VariantType::Int, 100, {"number of TFs per calibration time slot"}},
       {"max-delay", VariantType::Int, 3, {"number of slots in past to consider"}},
-      {"min-entries", VariantType::Int, 100, {"minimum number of entries to fit single time slot"}},
+      {"min-entries", VariantType::Int, 500, {"minimum number of entries to fit single time slot"}},
       {"min-momentum", VariantType::Double, 0.4, {"minimum momentum cut"}},
       {"max-momentum", VariantType::Double, 0.6, {"maximum momentum cut"}},
       {"min-clusters", VariantType::Int, 60, {"minimum number of clusters in a track"}},
+      {"apply-cuts", VariantType::Bool, false, {"enable tracks filter using cut values passed as options"}},
       {"nbins", VariantType::Int, 200, {"number of bins for stored"}},
       {"direct-file-dump", VariantType::Bool, false, {"directly dump calibration to file"}}}};
 }

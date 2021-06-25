@@ -64,7 +64,11 @@ CalibratordEdx::Slot& CalibratordEdx::emplaceNewSlot(bool front, uint64_t tstart
 {
   auto& cont = getSlots();
   auto& slot = front ? cont.emplace_front(tstart, tend) : cont.emplace_back(tstart, tend);
-  slot.setContainer(std::make_unique<CalibdEdx>(mMinP, mMaxP, mMinClusters, mNBins));
+  if (mApplyCuts) {
+    slot.setContainer(std::make_unique<CalibdEdx>(mMinP, mMaxP, mMinClusters, mNBins));
+  } else {
+    slot.setContainer(std::make_unique<CalibdEdx>(mNBins));
+  }
   return slot;
 }
 

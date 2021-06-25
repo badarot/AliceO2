@@ -38,8 +38,12 @@ class CalibratordEdx final : public o2::calibration::TimeSlotCalibration<o2::tpc
   using MIPVector = std::vector<CalibMIP>;
 
  public:
-  CalibratordEdx(int minEntries = 100, double minP = 0.4, double maxP = 0.6, int minClusters = 60, int nBins = 200)
-    : mMinEntries(minEntries), mMinClusters{minClusters}, mMinP{minP}, mMaxP{maxP}, mNBins{nBins}
+  CalibratordEdx(int nBins, int minEntries, double minP, double maxP, int minClusters)
+    : mNBins{nBins}, mMinEntries(minEntries), mApplyCuts{true}, mMinP{minP}, mMaxP{maxP}, mMinClusters{minClusters}
+  {
+  }
+  CalibratordEdx(int nBins, int minEntries)
+    : mNBins{nBins}, mMinEntries(minEntries), mApplyCuts{false}
   {
   }
   ~CalibratordEdx() final = default;
@@ -59,11 +63,12 @@ class CalibratordEdx final : public o2::calibration::TimeSlotCalibration<o2::tpc
   void dumpToFile(const std::string& fileName) const;
 
  private:
+  int mNBins{};       ///< Number of bins in each time slot histogram
   int mMinEntries{};  ///< Minimum amount of tracks in each time slot, to get enough statics
-  int mMinClusters{}; ///< Minimum number of clusters in a track
+  bool mApplyCuts{}; ///< Number of bins in each time slot histogram
   double mMinP{};     ///< Minimum track momentum
   double mMaxP{};     ///< Maximum track momentum
-  int mNBins{};       ///< Number of bins in each time slot histogram
+  int mMinClusters{}; ///< Minimum number of clusters in a track
 
   CcdbObjectInfoVector mInfoVector; ///< vector of CCDB Infos, each element is filled with the CCDB description of the accompanying MIP positions
   MIPVector mMIPVector;             ///< vector of MIP positions, each element is filled in "process" when we finalize one slot (multiple can be finalized during the same "process", which is why we have a vector. Each element is to be considered the output of the device, and will go to the CCDB

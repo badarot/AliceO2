@@ -8,20 +8,13 @@
 // granted to it by virtue of its status as an Intergovernmental Organization
 // or submit itself to any jurisdiction.
 
-#ifndef O2_CALIBRATION_TPCCALIBDEDXSPEC_H
-#define O2_CALIBRATION_TPCCALIBDEDXSPEC_H
-
-#include <TClass.h>
-#include "Framework/DataProcessorSpec.h"
+#include "TPCWorkflow/MIPTrackFilterSpec.h"
+#include "Framework/runDataProcessing.h"
 
 using namespace o2::framework;
 
-namespace o2::tpc
+WorkflowSpec defineDataProcessing(ConfigContext const&)
 {
-
-/// create a processor spec
-o2::framework::DataProcessorSpec getCalibdEdxSpec();
-
-} // namespace o2::tpc
-
-#endif // O2_CALIBRATION_TPCCALIBDEDXSPEC_H
+  using namespace o2::tpc;
+  return WorkflowSpec{getMIPTrackFilterSpec()};
+}
