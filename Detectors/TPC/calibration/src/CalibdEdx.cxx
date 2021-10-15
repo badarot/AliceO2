@@ -134,7 +134,7 @@ void CalibdEdx::finalize(std::array<float, 2> minEntries)
   const int stack_bins = mHist.axis(0).size() * mHist.axis(1).size() * mHist.axis(2).size();
   auto entry = bh::indexed(mHist).begin();
   for (size_t stack = 0; stack < 288; ++stack) {
-    CalibdEdxCorrection::StackID stackID{
+    StackID stackID{
       static_cast<int>(entry->bin(HistAxis::Sector).lower()),
       static_cast<enum Side>(entry->bin(HistAxis::Side).lower()),
       static_cast<GEMstack>(entry->bin(HistAxis::Stack).lower())};

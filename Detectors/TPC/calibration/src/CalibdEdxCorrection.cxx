@@ -14,17 +14,19 @@
 #include <algorithm>
 #include <array>
 #include <cstddef>
+#include <string_view>
 
 // o2 includes
 #include "DataFormatsTPC/Defs.h"
+
+// root includes
+#include "TFile.h"
 
 using namespace o2::tpc;
 
 size_t CalibdEdxCorrection::stackIndex(const StackID& stack, ChargeType charge)
 {
-  auto index = static_cast<size_t>(stack.sector);
-  index += static_cast<size_t>(stack.side * SECTORSPERSIDE);
-  index += static_cast<size_t>(stack.type * SECTORSPERSIDE * SIDES);
+  auto index = static_cast<size_t>(stack.index());
   index += static_cast<size_t>(charge * SECTORSPERSIDE * SIDES * GEMSTACKSPERSECTOR);
   return index;
 }
@@ -50,4 +52,18 @@ void CalibdEdxCorrection::clear()
   }
   std::fill(mChi2.begin(), mChi2.end(), 0.0);
   mDims = 0;
+}
+
+void CalibdEdxCorrection::saveFile(std::string_view fileName) const
+{
+  TFile file(fileName.data(), "recreate");
+  file.WriteObject(this, "CalibdEdxCorrection");
+  file.Close();
+}
+
+void CalibdEdxCorrection::loadFile(std::string_view fileName)
+{
+  TFile file(fileName.data());
+  auto corr = file.Get<CalibdEdxCorrection>("CalibdEdxCorrection");
+  *this = *corr;
 }

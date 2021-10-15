@@ -15,10 +15,9 @@
 #ifndef ALICEO2_TPC_CALIBDEDXCORRECTION_H_
 #define ALICEO2_TPC_CALIBDEDXCORRECTION_H_
 
-#include "TPCCalibration/CalibdEdxCorrection.h"
-
 #include <cstddef>
 #include <array>
+#include <string_view>
 
 // o2 includes
 #include "DataFormatsTPC/Defs.h"
@@ -30,14 +29,8 @@ class CalibdEdxCorrection
 {
  public:
   using Params = std::array<float, 6>;
-
-  struct StackID {
-    int sector{};
-    Side side{};
-    GEMstack type{};
-  };
-
   CalibdEdxCorrection() { clear(); }
+  CalibdEdxCorrection(std::string_view fileName) { loadFile(fileName); }
 
   float correction(const StackID&, ChargeType, float Tgl = 0, float Snp = 0) const;
 
@@ -50,6 +43,9 @@ class CalibdEdxCorrection
   void setDims(int dims) { mDims = dims; }
 
   void clear();
+
+  void saveFile(std::string_view fileName) const;
+  void loadFile(std::string_view fileName);
 
  private:
   static size_t stackIndex(const StackID&, ChargeType);
